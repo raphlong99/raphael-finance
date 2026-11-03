@@ -49,56 +49,43 @@ export default function MoneyMap({ pots, currency }: { pots: Pot[]; currency: st
         ))}
       </div>
 
-      {ORDER.map((g) => {
-        const list = pots.filter((p) => p.group === g);
-        if (!list.length) return null;
-        const meta = GROUP_META[g];
-        return (
-          <div key={g} className="potgroup" style={{ ["--c" as string]: `var(--c-${meta.color})` }}>
-            <div className="row between potgroup-head">
-              <span className="row" style={{ gap: 8 }}><span className="dot" /><b>{meta.label}</b><span className="muted small hide-sm">{meta.note}</span></span>
-              <span className="mono small">{fmt(list.reduce((s, p) => s + (p.value ?? 0), 0))}</span>
-            </div>
-            <div className="pots">
-              {list.map((p) => (
-                <article key={p.id} className="pot">
-                  <div className="pot-top">
-                    <div className="acct-main">
-                      <b>{p.name}</b>
-                      <span className={`small ${isStale(p.as_of) ? "warn-text" : "muted"}`}>{p.institution ? `${p.institution} · ` : ""}{ago(p.as_of)}</span>
-                    </div>
-                  </div>
-                  <BalanceEdit a={p} currency={currency} big />
-                  {p.surrender && (
-                    <div className="potnote">
-                      <span>If cashed out today</span><b className="mono">{fmt(p.surrender.value)}</b>
-                    </div>
-                  )}
-                  {p.holds.length > 0 && (
-                    <ul className="holds">
-                      {p.holds.map((h) => {
-                        const pct = h.target ? Math.min(100, (h.value / h.target) * 100) : null;
-                        return (
-                          <li key={h.id} style={{ ["--c" as string]: `var(--c-${h.color})` }}>
-                            <Link href={`/goals/${h.id}`}>
-                              <span className="row between" style={{ gap: 8, flexWrap: "nowrap" }}>
-                                <span className="row" style={{ gap: 6, flexWrap: "nowrap", minWidth: 0 }}><span className="dot" /><span className="holdname">{h.name}</span></span>
-                                <span className="mono small">{fmt(h.value)}{h.target ? <span className="muted"> / {fmt(h.target)}</span> : null}</span>
-                              </span>
-                              {pct !== null && <span className="bar"><i style={{ width: `${pct}%` }} /></span>}
-                            </Link>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  )}
-                  {p.holds.length > 1 && <span className="muted small">{p.holds.length} goals share this account. Give each its own account or pocket to see them apart at the bank too.</span>}
-                </article>
-              ))}
-            </div>
-          </div>
-        );
-      })}
+      <div className="pots">
+        {ORDER.flatMap((g) => pots.filter((p) => p.group === g)).map((p) => {
+          const meta = GROUP_META[p.group];
+          return (
+            <article key={p.id} className="pot" style={{ ["--c" as string]: `var(--c-${meta.color})` }}>
+              <span className="eyebrow row" style={{ gap: 6 }}><span className="dot" />{meta.label}</span>
+              <div className="acct-main">
+                <b>{p.name}</b>
+                <span className={`small ${isStale(p.as_of) ? "warn-text" : "muted"}`}>{p.institution ? `${p.institution} · ` : ""}{ago(p.as_of)}</span>
+              </div>
+              <BalanceEdit a={p} currency={currency} big />
+              {p.surrender && (
+                <div className="potnote"><span>If cashed out today</span><b className="mono">{fmt(p.surrender.value)}</b></div>
+              )}
+              {p.holds.length > 0 && (
+                <ul className="holds">
+                  {p.holds.map((h) => {
+                    const pct = h.target ? Math.min(100, (h.value / h.target) * 100) : null;
+                    return (
+                      <li key={h.id} style={{ ["--c" as string]: `var(--c-${h.color})` }}>
+                        <Link href={`/goals/${h.id}`}>
+                          <span className="row between" style={{ gap: 8, flexWrap: "nowrap" }}>
+                            <span className="row" style={{ gap: 6, flexWrap: "nowrap", minWidth: 0 }}><span className="dot" /><span className="holdname">{h.name}</span></span>
+                            <span className="mono small">{fmt(h.value)}{h.target ? <span className="muted"> / {fmt(h.target)}</span> : null}</span>
+                          </span>
+                          {pct !== null && <span className="bar"><i style={{ width: `${pct}%` }} /></span>}
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+              {p.holds.length > 1 && <span className="muted small">{p.holds.length} goals share this account. Give each its own account or pocket to keep them apart at the bank too.</span>}
+            </article>
+          );
+        })}
+      </div>
     </section>
   );
 }

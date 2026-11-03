@@ -223,7 +223,8 @@ canvas { display: block; width: 100%; height: 100%; cursor: crosshair; }
 .maplegend small { color: var(--muted); font-size: 12px; }
 .potgroup { margin-top: 18px; }
 .potgroup-head { padding-bottom: 8px; border-bottom: 2px solid var(--c); }
-.pots { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; margin-top: 12px; }
+.pots { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; margin-top: 16px; align-items: start; }
+.pot .eyebrow { color: var(--c); }
 .pot { display: flex; flex-direction: column; gap: 8px; padding: 14px; border-radius: 14px; border: 1px solid var(--line); background: var(--bg); min-width: 0; border-top: 3px solid var(--c); }
 .pot-top { display: flex; justify-content: space-between; gap: 8px; }
 .baledit { display: flex; flex-direction: column; gap: 4px; }
