@@ -70,10 +70,8 @@ export default function MoneyMap({ pots, currency }: { pots: Pot[]; currency: st
                     return (
                       <li key={h.id} style={{ ["--c" as string]: `var(--c-${h.color})` }}>
                         <Link href={`/goals/${h.id}`}>
-                          <span className="row between" style={{ gap: 8, flexWrap: "nowrap" }}>
-                            <span className="row" style={{ gap: 6, flexWrap: "nowrap", minWidth: 0 }}><span className="dot" /><span className="holdname">{h.name}</span></span>
-                            <span className="mono small">{fmt(h.value)}{h.target ? <span className="muted"> / {fmt(h.target)}</span> : null}</span>
-                          </span>
+                          <span className="row" style={{ gap: 6, flexWrap: "nowrap", minWidth: 0 }}><span className="dot" /><span className="holdname">{h.name}</span></span>
+                          <span className="mono small">{fmt(h.value)}{h.target ? <span className="muted"> of {fmt(h.target)}</span> : null}</span>
                           {pct !== null && <span className="bar"><i style={{ width: `${pct}%` }} /></span>}
                         </Link>
                       </li>
