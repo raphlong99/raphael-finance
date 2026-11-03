@@ -1,14 +1,19 @@
 import Nav from "@/components/Nav";
 import Dashboard from "@/components/Dashboard";
 import { loadUserData, todayISO } from "@/lib/data";
-import { bucketStart, latestBalances } from "@/lib/plan";
+import { applyRules, bucketStart, expensesTotal, latestBalances } from "@/lib/plan";
 import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
+function greeting(hour: number) {
+  return hour < 5 ? "Still up" : hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+}
+
 export default async function Home() {
   const d = await loadUserData();
   if (!d) redirect("/login");
+  if (!d.profile.onboarded) redirect("/welcome");
 
   const today = todayISO();
   const [y, m] = today.split("-").map(Number);
@@ -16,9 +21,7 @@ export default async function Home() {
   const buckets = d.buckets.filter((b) => !b.archived);
   const latest = latestBalances(d.balances);
   const start = bucketStart(buckets, latest);
-  const asOf = [...latest.values()].reduce<string | null>((a, b) => (!a || b.as_of > a ? b.as_of : a), null);
 
-  // Actual net worth at each logged date, using each account's latest balance on or before that date.
   const dates = [...new Set(d.balances.map((b) => b.as_of))].sort();
   const history = dates.map((dt) => {
     const snap = latestBalances(d.balances, dt);
@@ -26,15 +29,20 @@ export default async function Home() {
     return { offset: (yy - y) * 12 + (mm - m), net: [...snap.values()].reduce((a, b) => a + b.value, 0) };
   });
 
+  const logged = d.months.find((x) => x.month.startsWith(today.slice(0, 7)) && !x.is_estimate);
+  const thisMonth = logged
+    ? { income: logged.income, lines: logged.split, logged: true }
+    : { income: d.profile.income_estimate, lines: applyRules(d.profile.income_estimate, d.rules, expensesTotal(d.expenses)), logged: false };
+  const hour = Number(new Intl.DateTimeFormat("en-SG", { timeZone: "Asia/Singapore", hour: "numeric", hourCycle: "h23" }).format(new Date()));
+
   return (
     <>
       <Nav current="/" />
       <main className="wrap">
         <header>
-          <div className="eyebrow">{d.profile.display_name ? `${d.profile.display_name}'s plan` : "Your plan"}</div>
-          <h1>Where the money goes</h1>
+          <h1>{greeting(hour)}{d.profile.display_name ? `, ${d.profile.display_name}` : ""}</h1>
         </header>
-        <Dashboard profile={d.profile} buckets={buckets} rules={d.rules} expenses={d.expenses} start={start} startMonth={startMonth} history={history} asOf={asOf} />
+        <Dashboard profile={d.profile} buckets={buckets} rules={d.rules} expenses={d.expenses} start={start} startMonth={startMonth} history={history} thisMonth={thisMonth} />
       </main>
     </>
   );

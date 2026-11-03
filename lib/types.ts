@@ -8,7 +8,12 @@ export type Profile = {
   seasonal: Record<string, number>;
   cost_growth: number;
   cash_rate: number;
+  earner_type: EarnerType | null;
+  template: string | null;
+  onboarded: boolean;
 };
+
+export type EarnerType = "salaried" | "freelancer" | "business" | "mixed";
 
 export type Account = {
   id: string;
@@ -32,6 +37,8 @@ export type Bucket = {
   account_id: string | null;
   archived: boolean;
   notes: string | null;
+  target_date: string | null;
+  preset: string | null;
 };
 
 export type ExpenseItem = {

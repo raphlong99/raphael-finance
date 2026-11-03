@@ -69,12 +69,17 @@ export default async function Setup({ searchParams }: { searchParams: Promise<{ 
       <Nav current="/setup" />
       <main className="wrap">
         <header>
-          <div className="eyebrow">Setup</div>
-          <h1>Your buckets and rules</h1>
+          <div className="eyebrow">Settings</div>
+          <h1>Fine-tune your plan</h1>
           <p className="muted" style={{ margin: 0, maxWidth: "64ch" }}>Accounts are where money sits. Buckets are what it's for. Rules decide how each month's income is split. Savings left over fills your savings buckets in order.</p>
         </header>
         {sp.error && <div className="notice" style={{ color: "var(--bad)" }}>Couldn't save: {sp.error}</div>}
         {sp.saved && <div className="notice">Saved.</div>}
+
+        <section className="panel row between">
+          <div><h2>Your split</h2><p className="muted small" style={{ margin: 0 }}>Switch to 50/30/20, Pay yourself first, Profit First, 6 Jars or the freelancer split. Your goals stay as they are.</p></div>
+          <a className="btn" href="/welcome?redo=split">Change split</a>
+        </section>
 
         <section className="panel">
           <h2>Projection</h2>

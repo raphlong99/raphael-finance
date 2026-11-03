@@ -40,6 +40,9 @@ export async function loadUserData(): Promise<UserData | null> {
     seasonal: pr.seasonal ?? {},
     cost_growth: num(pr.cost_growth),
     cash_rate: num(pr.cash_rate),
+    earner_type: pr.earner_type ?? null,
+    template: pr.template ?? null,
+    onboarded: !!pr.onboarded,
   };
 
   return {

@@ -13,7 +13,8 @@ begin
   if exists (select 1 from public.accounts where user_id = uid) then raise notice 'Already imported'; return; end if;
 
   update public.profiles set display_name='Raphael', birth_month='1999-09-01', currency='SGD',
-    income_estimate=6000, income_growth=5, seasonal='{"11":-15,"12":-15}', cost_growth=2, cash_rate=2
+    income_estimate=6000, income_growth=5, seasonal='{"11":-15,"12":-15}', cost_growth=2, cash_rate=2,
+    earner_type='freelancer', template='freelancer', onboarded=true
   where id = uid;
 
   insert into public.accounts(user_id,name,institution,kind,sort,notes) values (uid,'UOB savings','UOB','cash',1,'Emergency fund, then tuition centre, then home') returning id into a_uob;

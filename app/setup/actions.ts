@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 type Kind = "text" | "num" | "numOrNull" | "bool" | "uuidOrNull" | "date" | "int";
 const TABLES: Record<string, Record<string, Kind>> = {
   accounts: { name: "text", institution: "text", kind: "text", currency: "text", sort: "int", archived: "bool", notes: "text" },
-  buckets: { name: "text", kind: "text", target: "numOrNull", fill_order: "int", color: "text", expected_return: "numOrNull", account_id: "uuidOrNull", archived: "bool", notes: "text" },
+  buckets: { name: "text", kind: "text", target: "numOrNull", fill_order: "int", color: "text", expected_return: "numOrNull", account_id: "uuidOrNull", archived: "bool", notes: "text", target_date: "date" },
   split_rules: { name: "text", kind: "text", value: "numOrNull", min_amount: "numOrNull", round_mode: "text", round_to: "num", bucket_id: "uuidOrNull", category: "text", sort: "int" },
   expense_items: { name: "text", monthly: "num", in_force: "bool", category: "text", sort: "int" },
   policies: { insurer: "text", name: "text", kind: "text", premium: "num", frequency: "text", paid_via: "text", next_due: "date", in_force: "bool", notes: "text", sort: "int" },
@@ -26,7 +26,8 @@ function parse(form: FormData, cols: Record<string, Kind>) {
     if (kind === "num") row[k] = Number.isFinite(parseFloat(s)) ? parseFloat(s) : 0;
     else if (kind === "int") row[k] = Number.isFinite(parseInt(s)) ? parseInt(s) : 0;
     else if (kind === "numOrNull") row[k] = s === "" ? null : Number.isFinite(parseFloat(s)) ? parseFloat(s) : null;
-    else if (kind === "uuidOrNull" || kind === "date") row[k] = s === "" ? null : s;
+    else if (kind === "date") row[k] = s === "" ? null : /^\d{4}-\d{2}$/.test(s) ? s + "-01" : s;
+    else if (kind === "uuidOrNull") row[k] = s === "" ? null : s;
     else row[k] = s === "" ? null : s;
   }
   return row;
@@ -47,7 +48,7 @@ export async function saveRow(form: FormData) {
     : await supabase.from(table).insert({ ...row, user_id: auth.user.id });
   if (res.error) redirect(`${back}?error=${encodeURIComponent(res.error.message)}`);
   revalidatePath("/", "layout");
-  redirect(back);
+  redirect(back + (back.includes("?") ? "&" : "?") + "saved=1");
 }
 
 export async function deleteRow(form: FormData) {
@@ -56,9 +57,10 @@ export async function deleteRow(form: FormData) {
   if (!TABLES[table]) throw new Error("Unknown table");
   const supabase = await createClient();
   const { error } = await supabase.from(table).delete().eq("id", String(form.get("_id")));
+  const after = String(form.get("_after_delete") || back);
   if (error) redirect(`${back}?error=${encodeURIComponent(error.message)}`);
   revalidatePath("/", "layout");
-  redirect(back);
+  redirect(after);
 }
 
 export async function saveProfile(form: FormData) {
