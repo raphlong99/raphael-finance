@@ -9,7 +9,7 @@ const TABLES: Record<string, Record<string, Kind>> = {
   buckets: { name: "text", kind: "text", target: "numOrNull", fill_order: "int", color: "text", expected_return: "numOrNull", account_id: "uuidOrNull", archived: "bool", notes: "text", target_date: "date" },
   split_rules: { name: "text", kind: "text", value: "numOrNull", min_amount: "numOrNull", round_mode: "text", round_to: "num", bucket_id: "uuidOrNull", category: "text", sort: "int" },
   expense_items: { name: "text", monthly: "num", in_force: "bool", category: "text", sort: "int" },
-  policies: { insurer: "text", name: "text", kind: "text", premium: "num", frequency: "text", paid_via: "text", next_due: "date", in_force: "bool", notes: "text", sort: "int" },
+  policies: { insurer: "text", name: "text", kind: "text", premium: "num", medisave_amount: "num", frequency: "text", paid_via: "text", next_due: "date", in_force: "bool", notes: "text", sort: "int" },
 };
 
 function parse(form: FormData, cols: Record<string, Kind>) {

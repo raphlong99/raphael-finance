@@ -33,6 +33,7 @@ export default async function Home() {
   const thisMonth = logged
     ? { income: logged.income, lines: logged.split, logged: true }
     : { income: d.profile.income_estimate, lines: applyRules(d.profile.income_estimate, d.rules, expensesTotal(d.expenses)), logged: false };
+  const accounts = d.accounts.filter((a) => !a.archived).map((a) => ({ id: a.id, name: a.name, kind: a.kind, value: latest.get(a.id)?.value ?? null, as_of: latest.get(a.id)?.as_of ?? null }));
   const hour = Number(new Intl.DateTimeFormat("en-SG", { timeZone: "Asia/Singapore", hour: "numeric", hourCycle: "h23" }).format(new Date()));
 
   return (
@@ -42,7 +43,7 @@ export default async function Home() {
         <header>
           <h1>{greeting(hour)}{d.profile.display_name ? `, ${d.profile.display_name}` : ""}</h1>
         </header>
-        <Dashboard profile={d.profile} buckets={buckets} rules={d.rules} expenses={d.expenses} start={start} startMonth={startMonth} history={history} thisMonth={thisMonth} />
+        <Dashboard profile={d.profile} buckets={buckets} rules={d.rules} expenses={d.expenses} start={start} startMonth={startMonth} history={history} thisMonth={thisMonth} accounts={accounts} />
       </main>
     </>
   );

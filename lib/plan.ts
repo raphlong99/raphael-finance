@@ -73,6 +73,7 @@ export type SimMonth = {
   values: Record<string, number>;
   savings: number;
   invested: number;
+  cpf: number;
   net: number;
 };
 
@@ -93,7 +94,7 @@ export function simulate({ profile, buckets, rules, expenses, start, startMonth,
   const baseExp = expensesTotal(expenses);
   const rc = Math.pow(1 + profile.cash_rate / 100, 1 / 12) - 1;
   const rates: Record<string, number> = {};
-  for (const b of buckets) rates[b.id] = b.kind === "investment" ? Math.pow(1 + (b.expected_return ?? 0) / 100, 1 / 12) - 1 : rc;
+  for (const b of buckets) rates[b.id] = b.kind !== "savings" ? Math.pow(1 + (b.expected_return ?? 0) / 100, 1 / 12) - 1 : rc;
   const out: SimMonth[] = [];
 
   const pour = (amount: number) => {
@@ -146,7 +147,8 @@ export function simulate({ profile, buckets, rules, expenses, start, startMonth,
     }
     const sav = savings.reduce((a, b) => a + v[b.id], 0);
     const inv = buckets.filter((b) => b.kind === "investment").reduce((a, b) => a + v[b.id], 0);
-    out.push({ m, income, lines, values: { ...v }, savings: sav, invested: inv, net: sav + inv });
+    const cpf = buckets.filter((b) => b.kind === "cpf").reduce((a, b) => a + v[b.id], 0);
+    out.push({ m, income, lines, values: { ...v }, savings: sav, invested: inv, cpf, net: sav + inv + cpf });
   }
   return out;
 }

@@ -29,7 +29,7 @@ export type Account = {
 export type Bucket = {
   id: string;
   name: string;
-  kind: "savings" | "investment";
+  kind: "savings" | "investment" | "cpf";
   target: number | null;
   fill_order: number;
   color: string;
@@ -91,6 +91,7 @@ export type Policy = {
   name: string;
   kind: "life" | "ci" | "hospital" | "pa" | "ilp" | "disability" | "other";
   premium: number;
+  medisave_amount: number;
   frequency: "monthly" | "quarterly" | "annual";
   paid_via: string | null;
   next_due: string | null;

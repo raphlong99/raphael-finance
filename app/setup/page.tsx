@@ -103,7 +103,7 @@ export default async function Setup({ searchParams }: { searchParams: Promise<{ 
           </form>
         </section>
 
-        <section className="panel">
+        <section className="panel" id="accounts">
           <h2>Accounts</h2>
           <div className="cards" style={{ marginTop: 12 }}>
             {d.accounts.map((a) => (
@@ -144,7 +144,7 @@ export default async function Setup({ searchParams }: { searchParams: Promise<{ 
                 <div className="row"><span className="dot" /><b>{b.name}</b><span className="muted small">{b.kind}</span></div>
                 <div className="formgrid">
                   <F label="Name" name="name" value={b.name} />
-                  <S label="Type" name="kind" value={b.kind} options={[["savings", "Savings"], ["investment", "Investment"]]} />
+                  <S label="Type" name="kind" value={b.kind} options={[["savings", "Savings goal"], ["investment", "Investment"], ["cpf", "CPF"]]} />
                   <F label="Target" name="target" type="number" step="100" value={b.target} ph="No target" />
                   <F label="Fill order" name="fill_order" type="number" value={b.fill_order} />
                   <F label="Return per year (%)" name="expected_return" type="number" step="0.5" value={b.expected_return} ph="Investments" />
@@ -160,7 +160,7 @@ export default async function Setup({ searchParams }: { searchParams: Promise<{ 
               <h3>New bucket</h3>
               <div className="formgrid">
                 <F label="Name" name="name" ph="Holiday fund" />
-                <S label="Type" name="kind" value="savings" options={[["savings", "Savings"], ["investment", "Investment"]]} />
+                <S label="Type" name="kind" value="savings" options={[["savings", "Savings goal"], ["investment", "Investment"], ["cpf", "CPF"]]} />
                 <F label="Target" name="target" type="number" step="100" />
                 <F label="Fill order" name="fill_order" type="number" value={d.buckets.length + 1} />
                 <S label="Colour" name="color" value={COLORS[d.buckets.length % COLORS.length]} options={colorOpts} />
@@ -213,39 +213,26 @@ export default async function Setup({ searchParams }: { searchParams: Promise<{ 
         <section className="panel">
           <div className="row between"><h2>Monthly expenses</h2><span className="mono">In force: S${Math.round(expensesTotal(d.expenses)).toLocaleString("en-SG")}</span></div>
           <p className="muted small">The "Sum of expenses" rule uses everything ticked as in force.</p>
-          <div className="tablewrap" style={{ marginTop: 10 }}>
-            <table className="t">
-              <thead><tr><th>Name</th><th className="num">Monthly</th><th>In force</th><th></th></tr></thead>
-              <tbody>
-                {d.expenses.map((e) => (
-                  <tr key={e.id}>
-                    <td colSpan={4}>
-                      <form action={saveRow} className="row" style={{ flexWrap: "nowrap" }}>
-                        <Meta table="expense_items" id={e.id} />
-                        <input name="name" defaultValue={e.name} className="input" aria-label="Name" style={{ flex: 2, minWidth: 140 }} />
-                        <input name="monthly" type="number" step="0.01" defaultValue={e.monthly} className="input mono" aria-label="Monthly amount" style={{ flex: 1, minWidth: 90 }} />
-                        <input type="hidden" name="sort" value={e.sort} />
-                        <C label="" name="in_force" checked={e.in_force} />
-                        <button className="btn sm" type="submit">Save</button>
-                        <button className="btn danger sm" type="submit" formAction={deleteRow}>Delete</button>
-                      </form>
-                    </td>
-                  </tr>
-                ))}
-                <tr>
-                  <td colSpan={4}>
-                    <form action={saveRow} className="row" style={{ flexWrap: "nowrap" }}>
-                      <Meta table="expense_items" />
-                      <input name="name" placeholder="New expense" className="input" aria-label="New expense name" style={{ flex: 2, minWidth: 140 }} />
-                      <input name="monthly" type="number" step="0.01" placeholder="0" className="input mono" aria-label="Monthly amount" style={{ flex: 1, minWidth: 90 }} />
-                      <input type="hidden" name="sort" value={d.expenses.length + 1} />
-                      <input type="hidden" name="in_force__cb" value="1" /><input type="hidden" name="in_force" value="on" />
-                      <button className="btn sm" type="submit">Add</button>
-                    </form>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+          <div style={{ marginTop: 10 }}>
+            <div className="exp exp-head"><span>Expense</span><span>Monthly (S$)</span><span style={{ textAlign: "center" }}>In force</span><span /></div>
+            {d.expenses.map((e) => (
+              <form key={e.id} action={saveRow} className="exp exp-row">
+                <Meta table="expense_items" id={e.id} />
+                <input type="hidden" name="sort" value={e.sort} />
+                <input name="name" defaultValue={e.name} className="input" aria-label="Expense name" />
+                <input name="monthly" type="number" step="0.01" defaultValue={e.monthly} className="input mono" aria-label={`Monthly amount for ${e.name}`} />
+                <span className="center"><input type="hidden" name="in_force__cb" value="1" /><input type="checkbox" name="in_force" defaultChecked={e.in_force} aria-label={`${e.name} in force`} /></span>
+                <span className="acts"><button className="btn sm" type="submit">Save</button><button className="btn danger sm" type="submit" formAction={deleteRow}>Delete</button></span>
+              </form>
+            ))}
+            <form action={saveRow} className="exp exp-row">
+              <Meta table="expense_items" />
+              <input type="hidden" name="sort" value={d.expenses.length + 1} />
+              <input name="name" placeholder="New expense" className="input" aria-label="New expense name" required />
+              <input name="monthly" type="number" step="0.01" placeholder="0" className="input mono" aria-label="Monthly amount" />
+              <span className="center"><input type="hidden" name="in_force__cb" value="1" /><input type="checkbox" name="in_force" defaultChecked aria-label="In force" /></span>
+              <span className="acts"><button className="btn sm" type="submit">Add</button></span>
+            </form>
           </div>
         </section>
       </main>

@@ -54,7 +54,7 @@ export async function loadUserData(): Promise<UserData | null> {
     expenses: (e.data ?? []).map((x) => ({ ...x, monthly: num(x.monthly) })) as ExpenseItem[],
     balances: (bal.data ?? []).map((x) => ({ ...x, value: num(x.value) })) as Balance[],
     months: (m.data ?? []).map((x) => ({ ...x, income: num(x.income) })) as MonthRow[],
-    policies: (pol.data ?? []).map((x) => ({ ...x, premium: num(x.premium) })) as Policy[],
+    policies: (pol.data ?? []).map((x) => ({ ...x, premium: num(x.premium), medisave_amount: num(x.medisave_amount) })) as Policy[],
   };
 }
 
@@ -63,5 +63,8 @@ export function todayISO(tz = "Asia/Singapore") {
 }
 
 export function monthlyPremium(p: Pick<Policy, "premium" | "frequency">) {
-  return p.frequency === "monthly" ? p.premium : p.frequency === "quarterly" ? p.premium / 3 : p.premium / 12;
+  return perMonth(p.premium, p.frequency);
+}
+export function perMonth(amount: number, frequency: Policy["frequency"]) {
+  return frequency === "monthly" ? amount : frequency === "quarterly" ? amount / 3 : amount / 12;
 }

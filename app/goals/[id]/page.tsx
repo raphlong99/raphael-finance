@@ -6,6 +6,7 @@ import { bucketStart, latestBalances, simulate } from "@/lib/plan";
 import { goalStatus, money, monthLabel, monthsUntil, spanText } from "@/lib/format";
 import { COLORS } from "@/lib/types";
 import { deleteRow, saveRow } from "@/app/setup/actions";
+import Balances from "@/components/Balances";
 
 export const dynamic = "force-dynamic";
 
@@ -45,7 +46,7 @@ export default async function GoalPage({ params, searchParams }: { params: Promi
       <main className="wrap" style={{ maxWidth: 900 }}>
         <header>
           <Link href="/" className="muted small">← Back to plan</Link>
-          <div className="eyebrow" style={{ marginTop: 8 }}>{b.kind === "investment" ? "Investment" : pos >= 0 ? `Goal ${pos + 1} of ${savingsGoals.length}` : "Goal"}</div>
+          <div className="eyebrow" style={{ marginTop: 8 }}>{b.kind === "investment" ? "Investment" : b.kind === "cpf" ? "CPF" : pos >= 0 ? `Goal ${pos + 1} of ${savingsGoals.length}` : "Goal"}</div>
           <h1>{b.name}</h1>
         </header>
         {sp.saved && <div className="notice">Saved.</div>}
@@ -67,6 +68,12 @@ export default async function GoalPage({ params, searchParams }: { params: Promi
             </dl>
           </div>
         </section>
+
+        {b.account_id && (() => {
+          const acc = d.accounts.find((a) => a.id === b.account_id);
+          const lb = latestBalances(d.balances).get(b.account_id!);
+          return acc ? <Balances accounts={[{ id: acc.id, name: acc.name, kind: acc.kind, value: lb?.value ?? null, as_of: lb?.as_of ?? null }]} currency={d.profile.currency} /> : null;
+        })()}
 
         <form action={saveRow} className="panel" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <input type="hidden" name="_table" value="buckets" />

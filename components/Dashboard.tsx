@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Chart from "./Chart";
+import Balances, { type AccountRow } from "./Balances";
 import { simulate } from "@/lib/plan";
 import { compactMoney, goalStatus, money, monthLabel, monthsUntil, spanText } from "@/lib/format";
 import { CATEGORY_COLOR, type Bucket, type ExpenseItem, type Profile, type SplitLine, type SplitRule } from "@/lib/types";
@@ -15,13 +16,14 @@ type Props = {
   startMonth: { y: number; m: number };
   history: { offset: number; net: number }[];
   thisMonth: { income: number; lines: SplitLine[]; logged: boolean };
+  accounts: AccountRow[];
 };
 
 const HORIZONS = [12, 60, 120, 360];
 const STEPS = [10000, 25000, 50000, 100000, 250000, 500000, 1000000, 2000000, 5000000];
 const nextStep = (v: number) => STEPS.find((s) => s > v) ?? v * 1.2;
 
-export default function Dashboard({ profile, buckets, rules, expenses, start, startMonth, history, thisMonth }: Props) {
+export default function Dashboard({ profile, buckets, rules, expenses, start, startMonth, history, thisMonth, accounts }: Props) {
   const cur = profile.currency;
   const fmt = (v: number) => money(v, cur);
   const compact = (v: number) => compactMoney(v, cur);
@@ -33,10 +35,12 @@ export default function Dashboard({ profile, buckets, rules, expenses, start, st
     const run = simulate({ profile, buckets, rules, expenses, start, startMonth, months: 480 });
     const sav = buckets.filter((b) => b.kind === "savings").reduce((a, b) => a + (start[b.id] ?? 0), 0);
     const inv = buckets.filter((b) => b.kind === "investment").reduce((a, b) => a + (start[b.id] ?? 0), 0);
-    return [{ m: 0, income: 0, lines: [], values: { ...start }, savings: sav, invested: inv, net: sav + inv }, ...run];
+    const cpf = buckets.filter((b) => b.kind === "cpf").reduce((a, b) => a + (start[b.id] ?? 0), 0);
+    return [{ m: 0, income: 0, lines: [], values: { ...start }, savings: sav, invested: inv, cpf, net: sav + inv + cpf }, ...run];
   }, [profile, buckets, rules, expenses, start, startMonth]);
   const goals = buckets.filter((b) => b.kind === "savings").sort((a, b) => a.fill_order - b.fill_order);
   const invest = buckets.filter((b) => b.kind === "investment");
+  const cpfs = buckets.filter((b) => b.kind === "cpf");
 
   const [horizon, setHorizon] = useState(60);
   const [month, setMonth] = useState(0);
@@ -82,6 +86,8 @@ export default function Dashboard({ profile, buckets, rules, expenses, start, st
           {shown.map((l, i) => <div key={i}><span className="dot" style={{ ["--c" as string]: `var(--c-${colorOfLine(l)})` }} /><span>{l.name}</span><b>{fmt(l.amount)}</b></div>)}
         </div>
       </section>
+
+      <Balances accounts={accounts} currency={cur} />
 
       <section className="panel future" aria-label="See your future">
         <div className="row between" style={{ alignItems: "baseline" }}>
@@ -138,24 +144,26 @@ export default function Dashboard({ profile, buckets, rules, expenses, start, st
         </div>
       </section>
 
-      {invest.length > 0 && (
-        <section className="panel">
-          <div className="row between"><h2>Investments</h2><span className="tankval">{fmt(s.invested)}</span></div>
-          <div className="investrow">
-            {invest.map((b) => {
-              const v = s.values[b.id] ?? 0;
-              const step = nextStep(v);
-              return (
-                <Link key={b.id} href={`/goals/${b.id}`} className="investitem" style={{ ["--c" as string]: `var(--c-${b.color})` }}>
-                  <div className="row between"><span className="row" style={{ gap: 8 }}><span className="dot" /><b>{b.name}</b></span><span className="mono">{fmt(v)}</span></div>
-                  <div className="bar"><i style={{ width: `${Math.min(100, (v / step) * 100)}%` }} /></div>
-                  <span className="muted small">{b.expected_return ?? 0}% a year assumed · next marker {compact(step)}</span>
-                </Link>
-              );
-            })}
-          </div>
-        </section>
-      )}
+      {[{ title: "Investments", list: invest, total: s.invested, note: "" }, { title: "CPF", list: cpfs, total: s.cpf, note: "Locked until retirement, except housing and healthcare" }]
+        .filter((g) => g.list.length > 0)
+        .map((g) => (
+          <section className="panel" key={g.title}>
+            <div className="row between"><div><h2>{g.title}</h2>{g.note && <span className="muted small">{g.note}</span>}</div><span className="tankval">{fmt(g.total)}</span></div>
+            <div className="investrow">
+              {g.list.map((b) => {
+                const v = s.values[b.id] ?? 0;
+                const step = nextStep(v);
+                return (
+                  <Link key={b.id} href={`/goals/${b.id}`} className="investitem" style={{ ["--c" as string]: `var(--c-${b.color})` }}>
+                    <div className="row between"><span className="row" style={{ gap: 8 }}><span className="dot" /><b>{b.name}</b></span><span className="mono">{fmt(v)}</span></div>
+                    <div className="bar"><i style={{ width: `${Math.min(100, (v / step) * 100)}%` }} /></div>
+                    <span className="muted small">{b.expected_return ?? 0}% a year {b.kind === "cpf" ? "interest" : "assumed"} · next marker {compact(step)}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
+        ))}
 
       <section className="long">
         <div className="panel">
@@ -178,9 +186,9 @@ export default function Dashboard({ profile, buckets, rules, expenses, start, st
         </div>
         <div className="panel">
           <div className="row between"><h2>The long view</h2><span className="muted small">Tap to jump to a month</span></div>
-          <Chart sim={sim} buckets={[...invest, ...goals]} horizon={horizon} month={month} history={history} onPick={(m) => { setPlaying(false); setMonth(m); }} compact={compact} startMonth={startMonth} />
+          <Chart sim={sim} buckets={[...cpfs, ...invest, ...goals]} horizon={horizon} month={month} history={history} onPick={(m) => { setPlaying(false); setMonth(m); }} compact={compact} startMonth={startMonth} />
           <div className="legend">
-            {[...invest, ...goals].map((b) => <span key={b.id}><i className="dot" style={{ ["--c" as string]: `var(--c-${b.color})` }} />{b.name}</span>)}
+            {[...cpfs, ...invest, ...goals].map((b) => <span key={b.id}><i className="dot" style={{ ["--c" as string]: `var(--c-${b.color})` }} />{b.name}</span>)}
             {history.length > 0 && <span><i className="dot" style={{ ["--c" as string]: "var(--ink)" }} />Actual</span>}
           </div>
         </div>
