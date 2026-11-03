@@ -88,7 +88,8 @@ export default async function GoalPage({ params, searchParams }: { params: Promi
               <div className="field"><label htmlFor="g-date">By when</label><input id="g-date" name="target_date" type="month" className="input" defaultValue={b.target_date?.slice(0, 7) ?? ""} /></div>
               <div className="field"><label htmlFor="g-order">Position in queue</label><input id="g-order" name="fill_order" type="number" min="1" className="input mono" defaultValue={b.fill_order} /></div>
             </> : <>
-              <div className="field"><label htmlFor="g-ret">Expected return per year (%)</label><input id="g-ret" name="expected_return" type="number" step="0.5" className="input mono" defaultValue={b.expected_return ?? ""} /></div>
+              <div className="field"><label htmlFor="g-ret">{b.kind === "cpf" ? "Interest per year (%)" : "Expected return per year (%)"}</label><input id="g-ret" name="expected_return" type="number" step="0.5" className="input mono" defaultValue={b.expected_return ?? ""} /></div>
+              <div className="field"><label htmlFor="g-target">Milestone (S$)</label><input id="g-target" name="target" type="number" step="100" className="input mono" defaultValue={b.target ?? ""} placeholder="Auto markers" /></div>
               <input type="hidden" name="fill_order" value={b.fill_order} />
             </>}
             <div className="field"><label htmlFor="g-color">Colour</label>
@@ -96,7 +97,7 @@ export default async function GoalPage({ params, searchParams }: { params: Promi
             <div className="field"><label htmlFor="g-acc">Money sits in</label>
               <select id="g-acc" name="account_id" className="input" defaultValue={b.account_id ?? ""}><option value="">Not linked</option>{accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}</select></div>
           </div>
-          <div className="field"><label htmlFor="g-notes">Notes</label><input id="g-notes" name="notes" className="input" defaultValue={b.notes ?? ""} /></div>
+          <div className="field"><label htmlFor="g-notes">{b.kind === "savings" ? "Notes" : "Milestone name (shown on the card)"}</label><input id="g-notes" name="notes" className="input" defaultValue={b.notes ?? ""} /></div>
           <label className="check"><input type="hidden" name="archived__cb" value="1" /><input type="checkbox" name="archived" defaultChecked={b.archived} /> Archive this goal (hide it and stop filling it)</label>
           <div className="row">
             <button className="btn" type="submit">Save changes</button>

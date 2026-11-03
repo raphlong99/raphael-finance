@@ -146,26 +146,42 @@ export default function Dashboard({ profile, buckets, rules, expenses, start, st
         </div>
       </section>
 
-      {[{ title: "Investments", list: invest, total: s.invested, note: "" }, { title: "CPF", list: cpfs, total: s.cpf, note: "Locked until retirement, except housing and healthcare" }]
-        .filter((g) => g.list.length > 0)
-        .map((g) => (
-          <section className="panel" key={g.title}>
-            <div className="row between"><div><h2>{g.title}</h2>{g.note && <span className="muted small">{g.note}</span>}</div><span className="tankval">{fmt(g.total)}</span></div>
-            <div className="investrow">
-              {g.list.map((b) => {
-                const v = s.values[b.id] ?? 0;
-                const step = nextStep(v);
-                return (
-                  <Link key={b.id} href={`/goals/${b.id}`} className="investitem" style={{ ["--c" as string]: `var(--c-${b.color})` }}>
-                    <div className="row between"><span className="row" style={{ gap: 8 }}><span className="dot" /><b>{b.name}</b></span><span className="mono">{fmt(v)}</span></div>
-                    <div className="bar"><i style={{ width: `${Math.min(100, (v / step) * 100)}%` }} /></div>
-                    <span className="muted small">{b.expected_return ?? 0}% a year {b.kind === "cpf" ? "interest" : "assumed"} · next marker {compact(step)}</span>
-                  </Link>
-                );
-              })}
-            </div>
-          </section>
-        ))}
+      {(invest.length > 0 || cpfs.length > 0) && (
+        <section>
+          <div className="row between" style={{ marginBottom: 12 }}>
+            <div><h2>Growing</h2><span className="muted small">These grow on their own with returns and interest. Drag the slider above to watch them fill.</span></div>
+            <span className="row small" style={{ gap: 14 }}>
+              {invest.length > 0 && <span>Investments <b className="mono">{fmt(s.invested)}</b></span>}
+              {cpfs.length > 0 && <span>CPF <b className="mono">{fmt(s.cpf)}</b></span>}
+            </span>
+          </div>
+          <div className="goalgrid">
+            {[...invest, ...cpfs].map((b) => {
+              const v = s.values[b.id] ?? 0;
+              const scale = b.target ?? nextStep(v);
+              const frac = Math.max(0, Math.min(v / scale, 1.1));
+              const eta = b.target ? first((x) => (x.values[b.id] ?? 0) >= b.target! - 0.5) : first((x) => (x.values[b.id] ?? 0) >= scale);
+              const reached = eta >= 0 && eta <= month;
+              const pct = Math.min(100, Math.round((v / scale) * 100));
+              return (
+                <Link key={b.id} href={`/goals/${b.id}`} className="goalcard" style={{ ["--c" as string]: `var(--c-${b.color})` }}>
+                  <div className="minitank"><div className={`water top ${frac <= 0.002 ? "empty" : ""}`} style={{ height: `${frac * 85}%` }} /><div className="target" /></div>
+                  <div className="goalbody">
+                    <span className="eyebrow">{b.kind === "cpf" ? "CPF" : "Investment"} · {b.expected_return ?? 0}% a year</span>
+                    <b className="goalname">{b.name}</b>
+                    <div className="tankval">{fmt(v)}</div>
+                    <div className="muted small">{b.target ? `of ${fmt(b.target)}${b.notes ? ` · ${b.notes}` : ""}` : `next marker ${compact(scale)}`}</div>
+                    <div className="bar" aria-label={`${pct}% of ${b.target ? "target" : "next marker"}`}><i style={{ width: `${pct}%` }} /></div>
+                    <div className={`status ${reached ? "good" : eta < 0 ? "muted" : ""}`}>
+                      {reached ? `${b.target ? "Target" : "Marker"} reached` : eta < 0 ? "Not within 40 years at this rate" : `${b.target ? "Reaches target" : `Passes ${compact(scale)}`} ${monthLabel(startMonth, eta)}${ageOf(eta) !== null ? ` · age ${ageOf(eta)}` : ""}`}
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {protection}
 
