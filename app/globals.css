@@ -8,8 +8,9 @@
   --f-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
   --f-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
 }
+/* Dark follows the device unless the switch in the nav picks a theme (data-theme on <html>). */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg: #0a171b; --surface: #10232a; --ink: #e3edef; --muted: #8ea4ab; --line: #21393f; --glass: #15303a;
     --c-teal: #39b4c9; --c-amber: #e6ae47; --c-green: #62bc88; --c-blue: #7090f2; --c-rose: #e26b82;
     --c-violet: #a08cf0; --c-coral: #ee8a6e; --c-slate: #6c8188; --c-slate2: #7d99a2; --c-line: #21393f;
@@ -17,6 +18,14 @@
     color-scheme: dark;
   }
 }
+:root[data-theme="dark"] {
+    --bg: #0a171b; --surface: #10232a; --ink: #e3edef; --muted: #8ea4ab; --line: #21393f; --glass: #15303a;
+    --c-teal: #39b4c9; --c-amber: #e6ae47; --c-green: #62bc88; --c-blue: #7090f2; --c-rose: #e26b82;
+    --c-violet: #a08cf0; --c-coral: #ee8a6e; --c-slate: #6c8188; --c-slate2: #7d99a2; --c-line: #21393f;
+    --good: #62bc88; --warn: #e6ae47; --bad: #ee7a66;
+    color-scheme: dark;
+}
+:root[data-theme="light"] { color-scheme: light; }
 * { box-sizing: border-box; }
 html, body { margin: 0; }
 body {
@@ -249,3 +258,6 @@ canvas { display: block; width: 100%; height: 100%; cursor: crosshair; }
 .covtile { display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); border-left: 4px solid var(--good); }
 .covtile.no { border-left-color: var(--bad); }
 .cashbox { display: flex; flex-direction: column; gap: 8px; padding: 10px; border-radius: 10px; background: var(--glass); }
+
+.themebtn { width: 34px; height: 34px; padding: 0; display: grid; place-items: center; border-radius: 50%; flex: none; }
+.themebtn svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }

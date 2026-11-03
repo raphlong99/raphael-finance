@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
+import ThemeToggle from "./ThemeToggle";
 
 const LINKS = [
   { href: "/", label: "Home" },
@@ -7,7 +9,9 @@ const LINKS = [
   { href: "/setup", label: "Settings" },
 ];
 
-export default function Nav({ current }: { current: string }) {
+export default async function Nav({ current }: { current: string }) {
+  const t = (await cookies()).get("theme")?.value;
+  const mode = t === "light" || t === "dark" ? t : "auto";
   return (
     <nav className="nav">
       <div className="nav-in">
@@ -19,6 +23,7 @@ export default function Nav({ current }: { current: string }) {
             </Link>
           ))}
         </div>
+        <ThemeToggle initial={mode} />
         <form action="/auth/signout" method="post">
           <button className="btn ghost sm" type="submit" aria-label="Sign out">Sign out</button>
         </form>

@@ -67,7 +67,8 @@ export default function Chart({ sim, buckets, horizon, month, history, onPick, c
     draw();
     const ro = new ResizeObserver(draw); ro.observe(cv);
     const mq = window.matchMedia("(prefers-color-scheme: dark)"); mq.addEventListener("change", draw);
-    return () => { ro.disconnect(); mq.removeEventListener("change", draw); };
+    const mo = new MutationObserver(draw); mo.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    return () => { ro.disconnect(); mo.disconnect(); mq.removeEventListener("change", draw); };
   }, [sim, buckets, horizon, month, history, histLen, compact, startMonth]);
 
   return (
