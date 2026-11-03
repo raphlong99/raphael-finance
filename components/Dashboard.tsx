@@ -167,7 +167,7 @@ export default function Dashboard({ profile, buckets, rules, expenses, start, st
                 <Link key={b.id} href={`/goals/${b.id}`} className="goalcard" style={{ ["--c" as string]: `var(--c-${b.color})` }}>
                   <div className="minitank"><div className={`water top ${frac <= 0.002 ? "empty" : ""}`} style={{ height: `${frac * 85}%` }} /><div className="target" /></div>
                   <div className="goalbody">
-                    <span className="eyebrow">{b.kind === "cpf" ? "CPF" : "Investment"} · {b.expected_return ?? 0}% a year</span>
+                    <span className="eyebrow">{b.kind === "cpf" ? "CPF" : "Investment"} · {b.expected_return ?? 0}%</span>
                     <b className="goalname">{b.name}</b>
                     <div className="tankval">{fmt(v)}</div>
                     <div className="muted small">{b.target ? `of ${fmt(b.target)}${b.notes ? ` · ${b.notes}` : ""}` : `next marker ${compact(scale)}`}</div>
