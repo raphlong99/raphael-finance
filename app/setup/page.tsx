@@ -4,6 +4,8 @@ import { expensesTotal } from "@/lib/plan";
 import { COLORS } from "@/lib/types";
 import { redirect } from "next/navigation";
 import { deleteRow, saveProfile, saveRow } from "./actions";
+import ConnectAI from "@/components/ConnectAI";
+import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
@@ -60,6 +62,7 @@ export default async function Setup({ searchParams }: { searchParams: Promise<{ 
   if (!d) redirect("/login");
   const sp = await searchParams;
   const p = d.profile;
+  const { data: links } = await (await createClient()).from("mcp_tokens").select("id,name,created_at,last_used_at").order("created_at", { ascending: false });
   const accOpts: [string, string][] = [["", "Not linked"], ...d.accounts.map((a) => [a.id, a.name] as [string, string])];
   const bucketOpts: [string, string][] = [["", "Spent or set aside"], ...d.buckets.map((b) => [b.id, b.name] as [string, string])];
   const colorOpts: [string, string][] = COLORS.map((c) => [c, c[0].toUpperCase() + c.slice(1)]);
@@ -80,6 +83,8 @@ export default async function Setup({ searchParams }: { searchParams: Promise<{ 
           <div><h2>Your split</h2><p className="muted small" style={{ margin: 0 }}>Switch to 50/30/20, Pay yourself first, Profit First, 6 Jars or the freelancer split. Your goals stay as they are.</p></div>
           <a className="btn" href="/welcome?redo=split">Change split</a>
         </section>
+
+        <ConnectAI links={links ?? []} />
 
         <section className="panel">
           <h2>Projection</h2>
