@@ -10,10 +10,11 @@ export type AccountRow = { id: string; name: string; kind: string; value: number
 const GROUPS: { key: string; label: string; kinds: string[] }[] = [
   { key: "cash", label: "Cash", kinds: ["cash", "other"] },
   { key: "invest", label: "Investments", kinds: ["brokerage", "ilp"] },
+  { key: "policy", label: "Insurance cash value", kinds: ["policy"] },
   { key: "cpf", label: "CPF", kinds: ["cpf"] },
 ];
 
-function ago(iso: string | null) {
+export function ago(iso: string | null) {
   if (!iso) return "No balance yet";
   const days = Math.round((Date.now() - new Date(iso + "T00:00:00+08:00").getTime()) / 86400000);
   if (days <= 0) return "Updated today";
@@ -21,14 +22,15 @@ function ago(iso: string | null) {
   if (days < 45) return `Updated ${days} days ago`;
   return `Updated ${Math.round(days / 30)} months ago`;
 }
+export const isStale = (iso: string | null) => (iso ? Date.now() - new Date(iso).getTime() > 40 * 86400000 : true);
 
-function Row({ a, currency }: { a: AccountRow; currency: string }) {
+/** The balance with an inline Update form. */
+export function BalanceEdit({ a, currency, big }: { a: AccountRow; currency: string; big?: boolean }) {
   const [editing, setEditing] = useState(false);
   const [val, setVal] = useState(a.value !== null ? String(a.value) : "");
   const [err, setErr] = useState("");
   const [pending, start] = useTransition();
   const router = useRouter();
-  const stale = a.as_of ? Date.now() - new Date(a.as_of).getTime() > 40 * 86400000 : true;
 
   const save = (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,25 +42,33 @@ function Row({ a, currency }: { a: AccountRow; currency: string }) {
   };
 
   return (
-    <li className="acct">
-      <div className="acct-main">
-        <b>{a.name}</b>
-        <span className={`small ${stale ? "warn-text" : "muted"}`}>{ago(a.as_of)}</span>
-      </div>
+    <div className="baledit">
       {editing ? (
         <form onSubmit={save} className="row" style={{ gap: 6, flexWrap: "nowrap" }}>
           <label className="sr" htmlFor={`bal-${a.id}`}>New balance for {a.name}</label>
-          <input id={`bal-${a.id}`} className="input mono" type="number" step="0.01" inputMode="decimal" autoFocus value={val} onChange={(e) => setVal(e.target.value)} style={{ width: 130 }} />
+          <input id={`bal-${a.id}`} className="input mono" type="number" step="0.01" inputMode="decimal" autoFocus value={val} onChange={(e) => setVal(e.target.value)} style={{ width: 120 }} />
           <button className="btn sm" type="submit" disabled={pending}>{pending ? "Saving…" : "Save"}</button>
           <button className="btn ghost sm" type="button" onClick={() => { setEditing(false); setVal(a.value !== null ? String(a.value) : ""); }}>Cancel</button>
         </form>
       ) : (
         <div className="row" style={{ gap: 10, flexWrap: "nowrap" }}>
-          <span className="mono">{a.value !== null ? money(a.value, currency) : "–"}</span>
+          <span className={big ? "tankval" : "mono"}>{a.value !== null ? money(a.value, currency) : "–"}</span>
           <button className="btn ghost sm" type="button" onClick={() => setEditing(true)}>{a.value !== null ? "Update" : "Add"}</button>
         </div>
       )}
-      {err && <span className="small" style={{ color: "var(--bad)", gridColumn: "1 / -1" }}>{err}</span>}
+      {err && <span className="small" style={{ color: "var(--bad)" }}>{err}</span>}
+    </div>
+  );
+}
+
+function Row({ a, currency }: { a: AccountRow; currency: string }) {
+  return (
+    <li className="acct">
+      <div className="acct-main">
+        <b>{a.name}</b>
+        <span className={`small ${isStale(a.as_of) ? "warn-text" : "muted"}`}>{ago(a.as_of)}</span>
+      </div>
+      <BalanceEdit a={a} currency={currency} />
     </li>
   );
 }

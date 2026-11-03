@@ -2,14 +2,19 @@ import Nav from "@/components/Nav";
 import { loadUserData, perMonth, todayISO } from "@/lib/data";
 import { redirect } from "next/navigation";
 import { deleteRow, saveRow } from "../setup/actions";
+import { savePolicyValue } from "./actions";
+import Protection from "@/components/Protection";
+import { latestBalances } from "@/lib/plan";
 
 export const dynamic = "force-dynamic";
 
 const KIND_LABEL: Record<string, string> = { life: "Life", ci: "Critical illness", hospital: "Hospital", pa: "Personal accident", ilp: "Investment-linked", disability: "Disability income", other: "Other" };
 
-export default async function Insurance() {
+export default async function Insurance({ searchParams }: { searchParams: Promise<{ saved?: string; error?: string }> }) {
   const d = await loadUserData();
   if (!d) redirect("/login");
+  const sp = await searchParams;
+  const latest = latestBalances(d.balances);
   const today = todayISO();
   const fmt = (v: number) => "S$" + v.toLocaleString("en-SG", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
   const big = (v: number) => "S$" + Math.round(v).toLocaleString("en-SG");
@@ -19,13 +24,7 @@ export default async function Insurance() {
   const medisaveYearly = live.reduce((a, p) => a + perMonth(p.medisave_amount, p.frequency) * 12, 0);
   const FREQ: Record<string, string> = { monthly: "a month", quarterly: "a quarter", annual: "a year" };
 
-  // Total cover by type across policies in force, counting only cover still running today.
-  const totals = new Map<string, number>();
-  for (const p of live) for (const c of p.cover) {
-    if (!c.amount || (c.until && c.until < today)) continue;
-    const key = c.type.replace(/ booster$/i, "");
-    totals.set(key, (totals.get(key) ?? 0) + c.amount);
-  }
+  const cashValue = live.reduce((a, p) => a + (p.kind === "ilp" ? 0 : p.surrender_value ?? 0), 0);
   const upcoming = live.filter((p) => p.next_due).sort((a, b) => a.next_due!.localeCompare(b.next_due!)).slice(0, 4);
 
   return (
@@ -36,6 +35,10 @@ export default async function Insurance() {
           <div className="eyebrow">Insurance</div>
           <h1>What you're covered for</h1>
         </header>
+        {sp.saved && <div className="notice">Saved.</div>}
+        {sp.error && <div className="notice" style={{ color: "var(--bad)" }}>Couldn't save: {sp.error}</div>}
+
+        <Protection policies={d.policies} today={today} yearlyIncome={d.profile.income_estimate * 12} />
 
         <section className="long">
           <div className="panel">
@@ -56,15 +59,21 @@ export default async function Insurance() {
             </ul>
           </div>
           <div className="panel">
-            <h2>Total cover today</h2>
-            <div className="tablewrap" style={{ marginTop: 10 }}>
-              <table className="t">
-                <tbody>
-                  {[...totals.entries()].map(([k, v]) => <tr key={k}><td>{k}</td><td className="num">{big(v)}</td></tr>)}
-                  {!totals.size && <tr><td className="muted">Add the cover on each policy to see totals.</td></tr>}
-                </tbody>
-              </table>
-            </div>
+            <span className="eyebrow">Cash value</span>
+            <div className="big">{fmt(Math.round(cashValue * 100) / 100)}</div>
+            <span className="muted small">What your non-investment policies would pay if you cancelled them today. Counted in net worth.</span>
+            <ul className="miles">
+              {live.filter((p) => p.surrender_value !== null || p.account_id).map((p) => {
+                const fund = p.kind === "ilp" && p.account_id ? latest.get(p.account_id) : undefined;
+                return (
+                  <li key={p.id}>
+                    <span className="dot" style={{ ["--c" as string]: p.kind === "ilp" ? "var(--c-blue)" : "var(--c-violet)" }} />
+                    <span>{p.name}{fund && <small className="muted" style={{ display: "block" }}>Fund value {fmt(fund.value)}, counted under investments</small>}</span>
+                    <span className="dt">{p.surrender_value !== null ? fmt(p.surrender_value) : "–"}<small>{p.surrender_as_of ? `if cancelled, ${new Date(p.surrender_as_of).toLocaleDateString("en-SG", { day: "numeric", month: "short" })}` : ""}</small></span>
+                  </li>
+                );
+              })}
+            </ul>
           </div>
         </section>
 
@@ -106,6 +115,18 @@ export default async function Insurance() {
                   <div className="field"><label htmlFor={`ms-${p.id}`}>Paid from MediSave</label><input id={`ms-${p.id}`} name="medisave_amount" type="number" step="0.01" defaultValue={p.medisave_amount} className="input mono" /></div>
                   <div className="field"><label htmlFor={`nd-${p.id}`}>Next due</label><input id={`nd-${p.id}`} name="next_due" type="date" defaultValue={p.next_due ?? ""} className="input" /></div>
                 </div>
+                {p.kind !== "hospital" && p.kind !== "pa" && (
+                  <div className="cashbox">
+                    <div className="formgrid">
+                      <div className="field"><label htmlFor={`sv-${p.id}`}>Cash value if cancelled</label><input id={`sv-${p.id}`} name="surrender_value" type="number" step="0.01" defaultValue={p.surrender_value ?? ""} placeholder="None" className="input mono" /></div>
+                      <div className="field"><label htmlFor={`sa-${p.id}`}>As of</label><input id={`sa-${p.id}`} name="surrender_as_of" type="date" defaultValue={p.surrender_as_of ?? today} className="input" /></div>
+                    </div>
+                    <div className="row between" style={{ gap: 8 }}>
+                      <span className="muted small">{p.kind === "ilp" ? "Fund value is tracked on the account; this is the payout after surrender charges." : "Counts in your net worth."}</span>
+                      <button className="btn ghost sm" type="submit" formAction={savePolicyValue}>Save cash value</button>
+                    </div>
+                  </div>
+                )}
                 {p.notes && <p className="muted small" style={{ margin: 0 }}>{p.notes}</p>}
                 <label className="check"><input type="hidden" name="in_force__cb" value="1" /><input type="checkbox" name="in_force" defaultChecked={p.in_force} /> In force</label>
                 <div className="row">

@@ -214,3 +214,37 @@ canvas { display: block; width: 100%; height: 100%; cursor: crosshair; }
 }
 .paysplit { display: flex; flex-direction: column; gap: 2px; }
 .paysplit .dot { vertical-align: 1px; margin-right: 2px; }
+
+/* Where your money is */
+.mapbar { height: 18px; border-radius: 6px; margin: 14px 0 10px; }
+.maplegend { display: flex; flex-wrap: wrap; gap: 6px 22px; font-size: 13.5px; }
+.maplegend div { display: flex; gap: 7px; align-items: baseline; }
+.maplegend b { font-family: var(--f-mono); font-weight: 500; }
+.maplegend small { color: var(--muted); font-size: 12px; }
+.potgroup { margin-top: 18px; }
+.potgroup-head { padding-bottom: 8px; border-bottom: 2px solid var(--c); }
+.pots { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; margin-top: 12px; }
+.pot { display: flex; flex-direction: column; gap: 8px; padding: 14px; border-radius: 14px; border: 1px solid var(--line); background: var(--bg); min-width: 0; border-top: 3px solid var(--c); }
+.pot-top { display: flex; justify-content: space-between; gap: 8px; }
+.baledit { display: flex; flex-direction: column; gap: 4px; }
+.potnote { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; color: var(--muted); padding: 6px 10px; border-radius: 8px; background: var(--glass); }
+.potnote b { color: var(--ink); font-weight: 500; }
+.holds { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; border-top: 1px dashed var(--line); padding-top: 10px; }
+.holds a { text-decoration: none; color: inherit; display: flex; flex-direction: column; gap: 2px; }
+.holds a:hover .holdname { text-decoration: underline; }
+.holdname { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
+@media (max-width: 560px) { .hide-sm { display: none; } }
+
+/* Protection */
+.protect { display: flex; flex-direction: column; gap: 16px; }
+.covers { display: flex; flex-direction: column; gap: 16px; }
+.cover { display: flex; flex-direction: column; gap: 6px; }
+.covbar { position: relative; height: 14px; border-radius: 999px; background: var(--glass); }
+.covbar i { position: absolute; top: 0; bottom: 0; left: 0; border-radius: 999px; }
+.covbar .have { background: var(--c-violet); }
+.covbar .planned { background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--c-violet) 55%, transparent) 0 5px, transparent 5px 9px); border: 1px dashed var(--c-violet); border-radius: 0 999px 999px 0; }
+.covbar .mark { position: absolute; top: -5px; bottom: -5px; width: 2px; margin-left: -1px; background: var(--ink); border-radius: 2px; }
+.covtiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.covtile { display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); border-left: 4px solid var(--good); }
+.covtile.no { border-left-color: var(--bad); }
+.cashbox { display: flex; flex-direction: column; gap: 8px; padding: 10px; border-radius: 10px; background: var(--glass); }

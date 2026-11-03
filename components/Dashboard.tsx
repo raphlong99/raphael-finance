@@ -1,8 +1,7 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import Chart from "./Chart";
-import Balances, { type AccountRow } from "./Balances";
 import { simulate } from "@/lib/plan";
 import { compactMoney, goalStatus, money, monthLabel, monthsUntil, spanText } from "@/lib/format";
 import { CATEGORY_COLOR, type Bucket, type ExpenseItem, type Profile, type SplitLine, type SplitRule } from "@/lib/types";
@@ -16,14 +15,16 @@ type Props = {
   startMonth: { y: number; m: number };
   history: { offset: number; net: number }[];
   thisMonth: { income: number; lines: SplitLine[]; logged: boolean };
-  accounts: AccountRow[];
+  unprojected: number;
+  money: ReactNode;
+  protection: ReactNode;
 };
 
 const HORIZONS = [12, 60, 120, 360];
 const STEPS = [10000, 25000, 50000, 100000, 250000, 500000, 1000000, 2000000, 5000000];
 const nextStep = (v: number) => STEPS.find((s) => s > v) ?? v * 1.2;
 
-export default function Dashboard({ profile, buckets, rules, expenses, start, startMonth, history, thisMonth, accounts }: Props) {
+export default function Dashboard({ profile, buckets, rules, expenses, start, startMonth, history, thisMonth, unprojected, money: moneyMap, protection }: Props) {
   const cur = profile.currency;
   const fmt = (v: number) => money(v, cur);
   const compact = (v: number) => compactMoney(v, cur);
@@ -36,8 +37,9 @@ export default function Dashboard({ profile, buckets, rules, expenses, start, st
     const sav = buckets.filter((b) => b.kind === "savings").reduce((a, b) => a + (start[b.id] ?? 0), 0);
     const inv = buckets.filter((b) => b.kind === "investment").reduce((a, b) => a + (start[b.id] ?? 0), 0);
     const cpf = buckets.filter((b) => b.kind === "cpf").reduce((a, b) => a + (start[b.id] ?? 0), 0);
-    return [{ m: 0, income: 0, lines: [], values: { ...start }, savings: sav, invested: inv, cpf, net: sav + inv + cpf }, ...run];
-  }, [profile, buckets, rules, expenses, start, startMonth]);
+    const today = { m: 0, income: 0, lines: [], values: { ...start }, savings: sav, invested: inv, cpf, net: sav + inv + cpf };
+    return [today, ...run].map((x) => ({ ...x, net: x.net + unprojected }));
+  }, [profile, buckets, rules, expenses, start, startMonth, unprojected]);
   const goals = buckets.filter((b) => b.kind === "savings").sort((a, b) => a.fill_order - b.fill_order);
   const invest = buckets.filter((b) => b.kind === "investment");
   const cpfs = buckets.filter((b) => b.kind === "cpf");
@@ -87,7 +89,7 @@ export default function Dashboard({ profile, buckets, rules, expenses, start, st
         </div>
       </section>
 
-      <Balances accounts={accounts} currency={cur} />
+      {moneyMap}
 
       <section className="panel future" aria-label="See your future">
         <div className="row between" style={{ alignItems: "baseline" }}>
@@ -164,6 +166,8 @@ export default function Dashboard({ profile, buckets, rules, expenses, start, st
             </div>
           </section>
         ))}
+
+      {protection}
 
       <section className="long">
         <div className="panel">

@@ -54,7 +54,7 @@ export async function loadUserData(): Promise<UserData | null> {
     expenses: (e.data ?? []).map((x) => ({ ...x, monthly: num(x.monthly) })) as ExpenseItem[],
     balances: (bal.data ?? []).map((x) => ({ ...x, value: num(x.value) })) as Balance[],
     months: (m.data ?? []).map((x) => ({ ...x, income: num(x.income) })) as MonthRow[],
-    policies: (pol.data ?? []).map((x) => ({ ...x, premium: num(x.premium), medisave_amount: num(x.medisave_amount) })) as Policy[],
+    policies: (pol.data ?? []).map((x) => ({ ...x, premium: num(x.premium), medisave_amount: num(x.medisave_amount), surrender_value: numOrNull(x.surrender_value) })) as Policy[],
   };
 }
 

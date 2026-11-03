@@ -55,7 +55,7 @@ function C({ label, name, checked }: { label: string; name: string; checked: boo
 const RULE_KINDS: [string, string][] = [["percent", "% of income"], ["fixed", "Fixed amount"], ["percent_min", "% with a minimum"], ["expenses", "Sum of expenses"], ["remainder", "Whatever is left"]];
 const CATS: [string, string][] = [["tax", "Tax"], ["needs", "Needs"], ["invest", "Invest"], ["fun", "Fun"], ["save", "Save"], ["other", "Other"]];
 const ROUND: [string, string][] = [["none", "No rounding"], ["up", "Round up"], ["down", "Round down"]];
-const ACC_KINDS: [string, string][] = [["cash", "Cash / bank"], ["brokerage", "Brokerage"], ["ilp", "Insurance-linked"], ["cpf", "CPF"], ["other", "Other"]];
+const ACC_KINDS: [string, string][] = [["cash", "Cash / bank"], ["brokerage", "Brokerage"], ["ilp", "Investment-linked policy (fund value)"], ["policy", "Insurance cash value"], ["cpf", "CPF"], ["other", "Other"]];
 
 export default async function Setup({ searchParams }: { searchParams: Promise<{ error?: string; saved?: string }> }) {
   const d = await loadUserData();

@@ -19,7 +19,7 @@ export type Account = {
   id: string;
   name: string;
   institution: string | null;
-  kind: "cash" | "brokerage" | "ilp" | "cpf" | "other";
+  kind: "cash" | "brokerage" | "ilp" | "cpf" | "policy" | "other";
   currency: string;
   sort: number;
   archived: boolean;
@@ -99,6 +99,9 @@ export type Policy = {
   in_force: boolean;
   notes: string | null;
   sort: number;
+  account_id: string | null;
+  surrender_value: number | null;
+  surrender_as_of: string | null;
 };
 
 export type SplitLine = {
